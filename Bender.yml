@@ -1,0 +1,23 @@
+# Copyright 2023 ETH Zurich and University of Bologna
+# Solderpad Hardware License, Version 0.51, see LICENSE for details.
+# SPDX-License-Identifier: SHL-0.51
+
+package:
+  name: bus_err_unit
+  authors:
+    - "Michael Rogenmoser <michaero@iis.ee.ethz.ch>"
+
+dependencies:
+  common_cells:       { git: "https://github.com/pulp-platform/common_cells.git",       version: 1.29.0 }
+  register_interface: { git: "https://github.com/pulp-platform/register_interface.git", version: 0.4.1 }
+
+sources:
+  # Level 1
+  - src/bus_err_unit_bare.sv
+  - src/bus_err_unit_reg_pkg.sv
+  - src/bus_err_unit_reg_top.sv
+  # Level 2
+  - src/bus_err_unit.sv
+  # Level 3
+  - src/axi_err_unit_wrap.sv
+  - src/obi_err_unit_wrap.sv
