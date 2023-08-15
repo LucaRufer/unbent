@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: SHL-0.51
 
 package:
-  name: bus_err_unit
+  name: unbent
   authors:
     - "Michael Rogenmoser <michaero@iis.ee.ethz.ch>"
 
