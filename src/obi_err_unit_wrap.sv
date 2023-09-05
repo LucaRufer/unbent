@@ -34,6 +34,7 @@ module obi_err_unit_wrap #(
 
   bus_err_unit #(
     .AddrWidth      (AddrWidth),
+    .MetaDataWidth  (MetaDataWidth),
     .ErrBits        (ErrBits),
     .NumOutstanding (NumOutstanding),
     .NumStoredErrors(NumStoredErrors),
