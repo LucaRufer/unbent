@@ -113,7 +113,7 @@ module axi_err_unit_wrap #(
     .req_addr_i       ( axi_req_i.ar.addr  ),
     .req_meta_i       ( axi_req_i.ar.id    ),
     .rsp_hs_valid_i   ( read_rsp_hs_valid  ),
-    .rsp_burst_last_i ( read_rsp_hs_valid & axi_rsp_i.r.last ),
+    .rsp_burst_last_i ( read_rsp_hs_valid & {2**IdWidth{axi_rsp_i.r.last}} ),
     .rsp_err_i        ( read_err ),
 
     .err_irq_o        ( err_irq_o[1] ),
