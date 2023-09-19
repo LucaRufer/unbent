@@ -107,7 +107,7 @@ module bus_err_unit_bare #(
 
   assign fifo_data = '{err:  rsp_err_i,
                        addr: addr_fifo_dead[chan_select] ? '0 : err_addr[chan_select],
-                       meta: err_meta[chan_select]};
+                       meta: addr_fifo_dead[chan_select] ? '0 : err_meta[chan_select]};
 
   fifo_v3 #(
     .FALL_THROUGH ( 1'b0            ),
