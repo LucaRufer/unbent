@@ -43,8 +43,8 @@ module axi_err_unit_wrap #(
     assign read_rsp_hs_valid[i]  = axi_rsp_i.r_valid  & axi_req_i.r_ready  & (axi_rsp_i.r.id == i);
   end
 
-  assign write_err[1:0] = axi_rsp_i.b.resp;
-  assign read_err[1:0] = axi_rsp_i.r.resp;
+  assign write_err[1:0] = axi_rsp_i.b.resp[1] ? axi_rsp_i.b.resp : '0;
+  assign read_err[1:0] = axi_rsp_i.r.resp[1] ? axi_rsp_i.r.resp : '0;
 
   if (UserErrBits > 0) begin
     assign write_err[UserErrBits+2-1:2] = axi_rsp_i.b.user[UserErrBits+UserErrBitsOffset-1:UserErrBitsOffset];
