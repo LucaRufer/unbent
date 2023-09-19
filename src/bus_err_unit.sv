@@ -100,7 +100,7 @@ module bus_err_unit #(
     .err_code_o      ( read_err_err       ),
     .err_addr_o      ( read_err_addr      ),
     .err_meta_o      ( read_err_meta      ),
-    .err_fifo_overflow_o( read_err_overflow ),
+    .err_fifo_overflow_o( read_err_overflow )
   );
 
 endmodule
