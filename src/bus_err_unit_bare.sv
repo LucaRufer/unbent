@@ -30,7 +30,8 @@ module bus_err_unit_bare #(
   input  logic                     err_fifo_pop_i,
   output logic [      ErrBits-1:0] err_code_o,
   output logic [    AddrWidth-1:0] err_addr_o,
-  output logic [MetaDataWidth-1:0] err_meta_o
+  output logic [MetaDataWidth-1:0] err_meta_o,
+  output logic                     err_fifo_overflow_o
 );
   assert final ($onehot0(req_hs_valid_i)) else $fatal(1, "Bus Error unit requires one-hot!");
   assert final ($onehot0(rsp_hs_valid_i)) else $fatal(1, "Bus Error unit requires one-hot!");
