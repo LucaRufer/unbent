@@ -58,7 +58,7 @@ module bus_err_unit_bare #(
     assign addr_fifo_push = req_hs_valid_i[i] & ~addr_fifo_full & ~addr_fifo_dead[i];
 
     full_write : assert property(
-        @(posedge clk_i) disable iff (~rst_ni) (req_hs_valid_i[i] & addr_fifo_full))
+        @(posedge clk_i) disable iff (~rst_ni) (addr_fifo_full |-> ~req_hs_valid_i[i]))
         else $warning("Bus Error Unit exceeded number of outstanding transactions, please tune appropriately.");
 
     always_ff @(posedge clk_i or negedge rst_ni) begin : proc_addr_fifo_dead
