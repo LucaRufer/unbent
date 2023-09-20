@@ -131,4 +131,6 @@ module bus_err_unit_bare #(
   assign err_addr_o = read_err_addr.addr;
   assign err_meta_o = read_err_addr.meta;
 
+  assign err_fifo_overflow_o = bus_unit_full;
+
 endmodule
