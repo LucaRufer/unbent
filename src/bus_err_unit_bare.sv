@@ -51,7 +51,7 @@ module bus_err_unit_bare #(
 
   assign err_irq_o = ~err_fifo_empty;
 
-  for (genvar i = 0; i < NumChannels; i++) begin
+  for (genvar i = 0; i < NumChannels; i++) begin : gen_addr_fifo
     logic addr_fifo_full;
     logic addr_fifo_push;
 
@@ -86,7 +86,7 @@ module bus_err_unit_bare #(
       .data_i    ({req_addr_i, req_meta_i}),
       .push_i    (addr_fifo_push),
       .data_o    ({err_addr[i], err_meta[i]}),
-      .pop_i     (rsp_burst_last_i[i] & ~addr_fifo_dead)
+      .pop_i     (rsp_burst_last_i[i] & ~addr_fifo_dead[i])
     );
   end
 
