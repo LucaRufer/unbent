@@ -31,7 +31,7 @@ module axi_err_unit_wrap #(
   output reg_rsp_t reg_rsp_o
 );
 
-  logic [2**IdWidth-1:0] write_req_hs_valid, write_rsp_hs_valid, read_req_hs_valid, read_rsp_hs_valid, amo_req_hs_valid;
+  logic [2**IdWidth-1:0] write_req_hs_valid, write_rsp_hs_valid, read_req_hs_valid, read_rsp_hs_valid, amo_r_req_hs_valid;
   logic [UserErrBits+2-1:0] write_err, read_err;
   reg_req_t [1:0] reg_req_internal;
   reg_rsp_t [1:0] reg_rsp_internal;
@@ -41,7 +41,8 @@ module axi_err_unit_wrap #(
     assign write_rsp_hs_valid[i] = axi_rsp_i.b_valid  & axi_req_i.b_ready  & (axi_rsp_i.b.id == i);
     assign read_req_hs_valid[i]  = axi_req_i.ar_valid & axi_rsp_i.ar_ready & (axi_req_i.ar.id == i);
     assign read_rsp_hs_valid[i]  = axi_rsp_i.r_valid  & axi_req_i.r_ready  & (axi_rsp_i.r.id == i);
-    assign amo_req_hs_valid[i]   = write_req_hs_valid[i] & (axi_req_i.aw.atop != axi_pkg::ATOP_NONE);
+    // This is an atomic with an R response -> push read address from AW channel
+    assign amo_r_req_hs_valid[i] = write_req_hs_valid[i] & axi_req_i.aw.atop[axi_pkg::ATOP_R_RESP];
   end
 
   assign write_err[1:0] = axi_rsp_i.b.resp[1] ? axi_rsp_i.b.resp : '0;
@@ -112,7 +113,7 @@ module axi_err_unit_wrap #(
     .rst_ni,
     .testmode_i,
 
-    .req_hs_valid_i   ( {amo_req_hs_valid, read_req_hs_valid} ),
+    .req_hs_valid_i   ( {amo_r_req_hs_valid, read_req_hs_valid} ),
     .req_addr_i       ( {axi_req_i.aw.addr, axi_req_i.ar.addr} ),
     .req_meta_i       ( {axi_req_i.aw.id, axi_req_i.ar.id} ),
     .rsp_hs_valid_i   ( read_rsp_hs_valid  ),
