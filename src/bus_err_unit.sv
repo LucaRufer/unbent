@@ -11,26 +11,27 @@ module bus_err_unit #(
   parameter int unsigned ErrBits         = 3,
   parameter int unsigned NumOutstanding  = 4,
   parameter int unsigned NumStoredErrors = 4,
+  parameter int unsigned NumReqPorts     = 1,
   parameter int unsigned NumChannels     = 1, // Channels are one-hot!
   parameter bit          DropOldest      = 1'b0,
   parameter type         reg_req_t       = logic,
   parameter type         reg_rsp_t       = logic
 ) (
-  input  logic                     clk_i,
-  input  logic                     rst_ni,
-  input  logic                     testmode_i,
-  
-  input  logic [  NumChannels-1:0] req_hs_valid_i,
-  input  logic [    AddrWidth-1:0] req_addr_i,
-  input  logic [MetaDataWidth-1:0] req_meta_i,
-  input  logic [  NumChannels-1:0] rsp_hs_valid_i,
-  input  logic [  NumChannels-1:0] rsp_burst_last_i,
-  input  logic [      ErrBits-1:0] rsp_err_i,
+  input  logic                                      clk_i,
+  input  logic                                      rst_ni,
+  input  logic                                      testmode_i,
 
-  output logic                     err_irq_o,
+  input  logic [NumReqPorts-1:0][  NumChannels-1:0] req_hs_valid_i,
+  input  logic [NumReqPorts-1:0][    AddrWidth-1:0] req_addr_i,
+  input  logic [NumReqPorts-1:0][MetaDataWidth-1:0] req_meta_i,
+  input  logic                  [  NumChannels-1:0] rsp_hs_valid_i,
+  input  logic                  [  NumChannels-1:0] rsp_burst_last_i,
+  input  logic                  [      ErrBits-1:0] rsp_err_i,
 
-  input  reg_req_t                 reg_req_i,
-  output reg_rsp_t                 reg_rsp_o
+  output logic                                      err_irq_o,
+
+  input  reg_req_t                                  reg_req_i,
+  output reg_rsp_t                                  reg_rsp_o
 
 );
 
@@ -80,6 +81,7 @@ module bus_err_unit #(
     .ErrBits        ( ErrBits         ),
     .NumOutstanding ( NumOutstanding  ),
     .NumStoredErrors( NumStoredErrors ),
+    .NumReqPorts    ( NumReqPorts     ),
     .NumChannels    ( NumChannels     ),
     .DropOldest     ( DropOldest      )
   ) i_err_unit_bare (

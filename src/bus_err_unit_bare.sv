@@ -11,29 +11,32 @@ module bus_err_unit_bare #(
   parameter int unsigned ErrBits         = 3,
   parameter int unsigned NumOutstanding  = 4,
   parameter int unsigned NumStoredErrors = 4,
+  parameter int unsigned NumReqPorts     = 1,
   parameter int unsigned NumChannels     = 1, // Channels are one-hot!
   parameter bit          DropOldest      = 1'b0
 ) (
-  input  logic                     clk_i,
-  input  logic                     rst_ni,
-  input  logic                     testmode_i,
-  
-  input  logic [  NumChannels-1:0] req_hs_valid_i,
-  input  logic [    AddrWidth-1:0] req_addr_i,
-  input  logic [MetaDataWidth-1:0] req_meta_i,
-  input  logic [  NumChannels-1:0] rsp_hs_valid_i,
-  input  logic [  NumChannels-1:0] rsp_burst_last_i,
-  input  logic [      ErrBits-1:0] rsp_err_i,
+  input  logic                                      clk_i,
+  input  logic                                      rst_ni,
+  input  logic                                      testmode_i,
 
-  output logic                     err_irq_o,
+  input  logic [NumReqPorts-1:0][  NumChannels-1:0] req_hs_valid_i,
+  input  logic [NumReqPorts-1:0][    AddrWidth-1:0] req_addr_i,
+  input  logic [NumReqPorts-1:0][MetaDataWidth-1:0] req_meta_i,
+  input  logic                  [  NumChannels-1:0] rsp_hs_valid_i,
+  input  logic                  [  NumChannels-1:0] rsp_burst_last_i,
+  input  logic                  [      ErrBits-1:0] rsp_err_i,
 
-  input  logic                     err_fifo_pop_i,
-  output logic [      ErrBits-1:0] err_code_o,
-  output logic [    AddrWidth-1:0] err_addr_o,
-  output logic [MetaDataWidth-1:0] err_meta_o,
-  output logic                     err_fifo_overflow_o
+  output logic                                      err_irq_o,
+
+  input  logic                                      err_fifo_pop_i,
+  output logic                  [      ErrBits-1:0] err_code_o,
+  output logic                  [    AddrWidth-1:0] err_addr_o,
+  output logic                  [MetaDataWidth-1:0] err_meta_o,
+  output logic                                      err_fifo_overflow_o
 );
-  assert final ($onehot0(req_hs_valid_i)) else $fatal(1, "Bus Error unit requires one-hot!");
+  for (genvar i = 0; i < NumReqPorts; i++) begin : gen_check_onehot
+    assert final ($onehot0(req_hs_valid_i[i])) else $fatal(1, "Bus Error unit requires one-hot!");
+  end
   assert final ($onehot0(rsp_hs_valid_i)) else $fatal(1, "Bus Error unit requires one-hot!");
 
   typedef struct packed {
@@ -54,18 +57,31 @@ module bus_err_unit_bare #(
   for (genvar i = 0; i < NumChannels; i++) begin : gen_addr_fifo
     logic addr_fifo_full;
     logic addr_fifo_push;
+    logic [NumReqPorts-1:0]                         req_port_onehot;
+    logic [cf_math_pkg::idx_width(NumReqPorts)-1:0] req_port_idx;
 
-    assign addr_fifo_push = req_hs_valid_i[i] & ~addr_fifo_full & ~addr_fifo_dead[i];
+    for (genvar j = 0; j < NumReqPorts; j++) begin : gen_req_port_onehot
+      assign req_port_onehot[j] = req_hs_valid_i[j][i];
+    end
+
+    onehot_to_bin #(
+      .ONEHOT_WIDTH(NumReqPorts)
+    ) i_req_port_select (
+      .onehot(req_port_onehot),
+      .bin   (req_port_idx)
+    );
+
+    assign addr_fifo_push = |req_port_onehot & ~addr_fifo_full & ~addr_fifo_dead[i];
 
     full_write : assert property(
-        @(posedge clk_i) disable iff (~rst_ni) (addr_fifo_full |-> ~req_hs_valid_i[i]))
+        @(posedge clk_i) disable iff (~rst_ni) (addr_fifo_full |-> ~|req_port_onehot))
         else $warning("Bus Error Unit exceeded number of outstanding transactions, please tune appropriately.");
 
     always_ff @(posedge clk_i or negedge rst_ni) begin : proc_addr_fifo_dead
       if(~rst_ni) begin
         addr_fifo_dead[i] <= '0;
       end else begin
-        if (req_hs_valid_i[i] & addr_fifo_full) begin
+        if (|req_port_onehot & addr_fifo_full) begin
           addr_fifo_dead[i] <= 1'b1;
         end
       end
@@ -83,7 +99,7 @@ module bus_err_unit_bare #(
       .full_o    (addr_fifo_full),
       .empty_o   (),
       .usage_o   (),
-      .data_i    ({req_addr_i, req_meta_i}),
+      .data_i    ({req_addr_i[req_port_idx], req_meta_i[req_port_idx]}),
       .push_i    (addr_fifo_push),
       .data_o    ({err_addr[i], err_meta[i]}),
       .pop_i     (rsp_burst_last_i[i] & ~addr_fifo_dead[i])
