@@ -34,10 +34,12 @@ module bus_err_unit_bare #(
   output logic                  [MetaDataWidth-1:0] err_meta_o,
   output logic                                      err_fifo_overflow_o
 );
-  for (genvar i = 0; i < NumReqPorts; i++) begin : gen_check_onehot
-    assert final ($onehot0(req_hs_valid_i[i])) else $fatal(1, "Bus Error unit requires one-hot!");
-  end
-  assert final ($onehot0(rsp_hs_valid_i)) else $fatal(1, "Bus Error unit requires one-hot!");
+  `ifndef SYNTHESIS
+    for (genvar i = 0; i < NumReqPorts; i++) begin : gen_check_onehot
+      assert final ($onehot0(req_hs_valid_i[i])) else $fatal(1, "Bus Error unit requires one-hot!");
+    end
+    assert final ($onehot0(rsp_hs_valid_i)) else $fatal(1, "Bus Error unit requires one-hot!");
+  `endif
 
   typedef struct packed {
     logic [      ErrBits-1:0] err;
@@ -73,9 +75,11 @@ module bus_err_unit_bare #(
 
     assign addr_fifo_push = |req_port_onehot & ~addr_fifo_full & ~addr_fifo_dead[i];
 
-    full_write : assert property(
-        @(posedge clk_i) disable iff (~rst_ni) (addr_fifo_full |-> ~|req_port_onehot))
-        else $warning("Bus Error Unit exceeded number of outstanding transactions, please tune appropriately.");
+    `ifndef SYNTHESIS
+      full_write : assert property(
+          @(posedge clk_i) disable iff (~rst_ni) (addr_fifo_full |-> ~|req_port_onehot))
+          else $warning("Bus Error Unit exceeded number of outstanding transactions, please tune appropriately.");
+    `endif
 
     always_ff @(posedge clk_i or negedge rst_ni) begin : proc_addr_fifo_dead
       if(~rst_ni) begin
